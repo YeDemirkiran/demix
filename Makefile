@@ -66,4 +66,4 @@ fclean: clean
 
 re: fclean all
 
-.PHONY: all kernel-bin run clean fclean re
+.PHONY: all kernel-bin copy-grub-cfg run clean fclean re
