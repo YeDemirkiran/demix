@@ -11,8 +11,10 @@ OBJ_FILES = $(addprefix $(BIN_DIR)/, $(C_FILES:.c=.o) $(ASM_FILES:.asm=.o))
 # ISO directory and kernel file
 ISO_DIR := ./iso
 BOOT_DIR := $(ISO_DIR)/boot
+GRUB_DIR := $(BOOT_DIR)/grub
 KERNEL_BIN_NAME := kernel.bin
 KERNEL_BIN_PATH := $(BOOT_DIR)/$(KERNEL_BIN_NAME)
+GRUB_CFG_NAME := grub.cfg
 
 LINKER_FILE := ./linker.ld
 
@@ -34,14 +36,19 @@ all: $(NAME)
 run: all
 	$(QEMU) $(QEMU_FLAGS) $(NAME)
 
-$(NAME): kernel-bin
+$(NAME): kernel-bin copy-grub-cfg
 	grub-mkrescue -o $@ $(ISO_DIR)
 
 kernel-bin: $(KERNEL_BIN_PATH)
+copy-grub-cfg: $(GRUB_DIR)/$(GRUB_CFG_NAME)
 
 $(KERNEL_BIN_PATH): $(OBJ_FILES)
 	@mkdir -p $(dir $@)
 	$(LD) $(LD_FLAGS) -o $@ $^
+
+$(GRUB_DIR)/$(GRUB_CFG_NAME): $(GRUB_CFG_NAME)
+	@mkdir -p $(dir $@)
+	cp $< $@
 
 $(BIN_DIR)/%.o: $(SRC_DIR)/%.c
 	@mkdir -p $(dir $@)
@@ -55,7 +62,7 @@ clean:
 	rm -rf $(BIN_DIR)
 
 fclean: clean
-	rm $(NAME) $(KERNEL_BIN_PATH)
+	rm -rf $(NAME) $(ISO_DIR)
 
 re: fclean all
 
