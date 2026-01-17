@@ -24,7 +24,7 @@ AS := nasm
 LD := ld
 QEMU := qemu-system-i386
 
-CC_FLAGS := -Wall -Wextra -Werror -m32 -ffreestanding
+CC_FLAGS := -Wall -Wextra -Werror -m32 -ffreestanding -c
 AS_FLAGS := -f elf32
 LD_FLAGS := -m elf_i386 -T $(LINKER_FILE)
 QEMU_FLAGS := -cdrom
