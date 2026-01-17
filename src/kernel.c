@@ -16,7 +16,7 @@ void	print(const char *str)
 
 void	kernel_main(void)
 {
-	print("Hello world!");
+	print("DemiX");
 
 	while (1)
 	{
