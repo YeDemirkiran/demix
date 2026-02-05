@@ -44,10 +44,10 @@ typedef enum e_vga_color
 
 typedef struct s_terminal
 {
-	size_t		row;
-	size_t		column;
-	uint8_t		color;
-	uint16_t	*buffer;
+	size_t				row;
+	size_t				column;
+	uint8_t				color;
+	volatile uint16_t	*buffer;
 }	t_terminal;
 
 size_t	ft_strlen(const char *str)
@@ -145,7 +145,7 @@ void	init_terminal(t_terminal *terminal_addr)
 		return ;
 	terminal_addr->row = 0;
 	terminal_addr->column = 0;
-	terminal_addr->buffer = VGA_MEMORY;
+	terminal_addr->buffer = (uint16_t *)VGA_MEMORY;
 	terminal_addr->color = vga_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
 	clear_terminal(terminal_addr);
 }
