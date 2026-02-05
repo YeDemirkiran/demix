@@ -79,22 +79,44 @@ void	terminal_set_color(t_terminal *terminal_addr, uint8_t color)
 	terminal_addr->color = color;
 }
 
+bool	vga_is_char(uint16_t vga_char, unsigned char uc)
+{
+	uint8_t	byte;
+
+	byte = (uint8_t)vga_char;
+	if (byte == (uint8_t)uc)
+		return (true);
+	return (false);
+}
+
+void	terminal_add_row_column(t_terminal *terminal_addr,
+	size_t row, size_t column)
+{
+	if (terminal_addr == NULL)
+		return ;
+	terminal_addr->column += column;
+	terminal_addr->row += (terminal_addr->column / VGA_WIDTH) + row;
+	terminal_addr->column %= VGA_WIDTH;
+	terminal_addr->row %= VGA_HEIGHT;
+}
+
 void	terminal_putchar(t_terminal *terminal_addr, uint16_t c)
 {
 	size_t	index;
 
 	if (terminal_addr == NULL)
 		return ;
-	index = terminal_addr->row * VGA_HEIGHT + terminal_addr->column;
-	terminal_addr->buffer[index] = c;
-	terminal_addr->column += 1;
-	if (terminal_addr->column >= VGA_WIDTH)
+	if (vga_is_char(c, '\n') == true)
 	{
 		terminal_addr->column = 0;
-		terminal_addr->row += 1;
+		terminal_add_row_column(terminal_addr, 1, 0);
 	}
-	if (terminal_addr->row >= VGA_HEIGHT)
-		terminal_addr->row = 0;
+	else
+	{
+		index = terminal_addr->row * VGA_WIDTH + terminal_addr->column;
+		terminal_addr->buffer[index] = c;
+		terminal_add_row_column(terminal_addr, 0, 1);
+	}
 }
 
 void	terminal_putstr(t_terminal *terminal_addr, const char *str)
@@ -155,5 +177,5 @@ void	kernel_main(void)
 	t_terminal	terminal;
 
 	init_terminal(&terminal);
-	terminal_putstr(&terminal, "Anan baban");
+	terminal_putstr(&terminal, "Demix Kernel 0.0.1");
 }
