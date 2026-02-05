@@ -50,16 +50,19 @@ typedef struct s_terminal
 	volatile uint16_t	*buffer;
 }	t_terminal;
 
-size_t	ft_strlen(const char *str)
+size_t	term_buffer_copy(uint16_t *dst, const uint16_t *src, size_t len)
 {
-	size_t	len;
+	size_t	i;
 
-	if (str == NULL)
+	if (src == NULL || dst == NULL)
 		return (0);
-	len = 0;
-	while (str[len] != '\0')
-		len++;
-	return (len);
+	i = 0;
+	while (i < len)
+	{
+		dst[i] = src[i];
+		i++;
+	}
+	return (i);
 }
 
 static inline uint8_t	vga_color(t_vga_color fg, t_vga_color bg)
@@ -89,6 +92,55 @@ bool	vga_is_char(uint16_t vga_char, unsigned char uc)
 	return (false);
 }
 
+void	clear_terminal_offset(t_terminal *terminal_addr, size_t offset_y)
+{
+	size_t		x;
+	size_t		y;
+	size_t		index;
+	uint16_t	color;
+
+	if (terminal_addr == NULL)
+		return ;
+	y = offset_y;
+	color = terminal_addr->color;
+	while (y < VGA_HEIGHT)
+	{
+		x = 0;
+		while (x < VGA_WIDTH)
+		{
+			index = y * VGA_WIDTH + x;
+			terminal_addr->buffer[index] = vga_char(' ', color);
+			x++;
+		}
+		y++;
+	}
+	terminal_addr->row = 0;
+	terminal_addr->column = 0;
+}
+
+void	clear_terminal(t_terminal *terminal_addr)
+{
+	clear_terminal_offset(terminal_addr, 0);
+}
+
+void	on_terminal_row_overflow(t_terminal *terminal_addr)
+{
+	size_t		offset;
+	size_t		offset_length;
+	size_t		remain_length;
+	uint16_t	*buffer;
+
+	if (terminal_addr == NULL || terminal_addr->row < VGA_HEIGHT)
+		return ;
+	offset = terminal_addr->row -  VGA_HEIGHT;
+	offset_length = offset * VGA_WIDTH;
+	remain_length = VGA_WIDTH * VGA_HEIGHT;
+	buffer = (uint16_t *)(terminal_addr->buffer);
+	term_buffer_copy(buffer, buffer + offset_length, remain_length);
+	//clear_terminal_offset(terminal_addr, offset);
+	terminal_addr->row = VGA_HEIGHT;
+}
+
 void	terminal_add_row_column(t_terminal *terminal_addr,
 	size_t row, size_t column)
 {
@@ -97,7 +149,8 @@ void	terminal_add_row_column(t_terminal *terminal_addr,
 	terminal_addr->column += column;
 	terminal_addr->row += (terminal_addr->column / VGA_WIDTH) + row;
 	terminal_addr->column %= VGA_WIDTH;
-	terminal_addr->row %= VGA_HEIGHT;
+	if (terminal_addr->row >= VGA_HEIGHT)
+		on_terminal_row_overflow(terminal_addr);
 }
 
 void	terminal_putchar(t_terminal *terminal_addr, uint16_t c)
@@ -135,32 +188,6 @@ void	terminal_putstr(t_terminal *terminal_addr, const char *str)
 	}
 }
 
-void	clear_terminal(t_terminal *terminal_addr)
-{
-	size_t		x;
-	size_t		y;
-	size_t		index;
-	uint16_t	color;
-
-	if (terminal_addr == NULL)
-		return ;
-	y = 0;
-	color = terminal_addr->color;
-	while (y < VGA_HEIGHT)
-	{
-		x = 0;
-		while (x < VGA_WIDTH)
-		{
-			index = y * VGA_WIDTH + x;
-			terminal_addr->buffer[index] = vga_char(' ', color);
-			x++;
-		}
-		y++;
-	}
-	terminal_addr->row = 0;
-	terminal_addr->column = 0;
-}
-
 void	init_terminal(t_terminal *terminal_addr)
 {
 	if (terminal_addr == NULL)
@@ -177,5 +204,5 @@ void	kernel_main(void)
 	t_terminal	terminal;
 
 	init_terminal(&terminal);
-	terminal_putstr(&terminal, "Demix Kernel 0.0.1");
+	terminal_putstr(&terminal, "Demix Kernel 0.0.1\n");
 }
